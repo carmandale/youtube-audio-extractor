@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Audio Extractor</title>
+    <style>
+        :root {
+            --primary-color: #2d2d2d;
+            --secondary-color: #404040;
+            --accent-color: #00b4d8;
+            --background-color: #1a1a1a;
+            --card-background: #2d2d2d;
+            --text-color: #e0e0e0;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2em;
+            padding: 1em;
+        }
+
+        .logo {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 1em;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-color);
+            font-size: 2em;
+            margin: 0.5em 0;
+            font-weight: 300;
+        }
+
+        h2 {
+            color: var(--accent-color);
+            font-size: 1.5em;
+            margin-bottom: 1em;
+            font-weight: 400;
+        }
+
+        .section {
+            background: var(--card-background);
+            padding: 2em;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2em;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+            border-color: var(--accent-color);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1em;
+        }
+
+        label {
+            font-weight: 500;
+            margin-bottom: 0.5em;
+            color: var(--text-color);
+        }
+
+        input, select {
+            padding: 12px;
+            background: var(--primary-color);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            transition: var(--transition);
+            color: var(--text-color);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.2);
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        button:hover {
+            background-color: #0096b4;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background-color: #404040;
+            cursor: not-allowed;
+        }
+
+        #videoResults {
+            margin-top: 2em;
+        }
+
+        .video-item {
+            background: var(--primary-color);
+            padding: 1.5em;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5em;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: var(--transition);
+        }
+
+        .video-item:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .video-item h3 {
+            margin: 0 0 1em 0;
+            color: var(--accent-color);
+        }
+
+        .video-item p {
+            margin: 0.5em 0;
+            color: var(--text-color);
+        }
+
+        .download-btn {
+            margin-top: 1em;
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+
+        #videoResults h2 {
+            margin: 1em 0;
+            padding: 0.5em 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 1em;
+            color: var(--accent-color);
+        }
+
+        .loading::after {
+            content: "⏳";
+            animation: loading 1s infinite;
+        }
+
+        @keyframes loading {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+
+        #processVideosBtn, #downloadZipBtn {
+            display: none;
+            width: 100%;
+            margin-top: 1em;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            padding: 1em;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: var(--border-radius);
+            margin: 1em 0;
+            display: none;
+        }
+
+        ::placeholder {
+            color: #808080;
+        }
+
+        /* Modern Select Styling */
+        .select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .select-wrapper::after {
+            content: "⌄";
+            font-size: 1.2em;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: var(--accent-color);
+        }
+
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            background: var(--primary-color);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        /* Modern Number Input Styling */
+        .number-wrapper {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .number-controls {
+            position: absolute;
+            right: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .number-control-btn {
+            background: var(--accent-color);
+            border: none;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            color: white;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+            width: 100%;
+            padding-right: 45px;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Modern Input Styling */
+        input {
+            background: var(--primary-color);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            color: var(--text-color);
+            font-size: 1em;
+            transition: var(--transition);
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.2);
+        }
+
+        /* Modern Form Layout */
+        .form-group {
+            margin-bottom: 1.5em;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5em;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        /* Tooltip styling */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+            color: var(--accent-color);
+            cursor: help;
+        }
+
+        .tooltip:hover::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 12px;
+            background: var(--secondary-color);
+            border-radius: var(--border-radius);
+            font-size: 0.9em;
+            white-space: nowrap;
+            z-index: 1;
+        }
+
+        .download-all-btn {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 1.5em;
+            width: 100%;
+        }
+
+        .download-all-btn:hover {
+            background-color: #0096b4;
+            transform: translateY(-1px);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--primary-color);
+            border-radius: var(--border-radius);
+            margin: 1em 0;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Add to your existing CSS */
+        .video-title {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .video-title:hover {
+            color: #0096b4;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="{{ url_for('static', filename='images/GJ-WhiteLogo-Horizontal.png') }}" alt="Groove Jones Logo" class="logo">
+        <h1>YouTube Audio Extractor</h1>
+    </div>
+    
+    <div class="section">
+        <h2>Single Video Download</h2>
+        <form id="singleVideoForm">
+            <label for="video_url">YouTube Video URL:</label>
+            <input type="url" id="video_url" name="video_url" 
+                   placeholder="https://www.youtube.com/watch?v=..." required>
+            <button type="submit">Extract Audio</button>
+        </form>
+        <div id="singleVideoLoading" class="loading">Processing your video...</div>
+        <div id="singleVideoError" class="error-message"></div>
+    </div>
+
+    <div class="section">
+        <h2>Batch Search and Download</h2>
+        <form id="searchForm">
+            <label for="primary_query">Primary Search Query:</label>
+            <input type="text" id="primary_query" name="primary_query" 
+                   placeholder="Enter your search query" required>
+            
+            <label for="secondary_query">Secondary Search Query (Optional):</label>
+            <input type="text" id="secondary_query" name="secondary_query" 
+                   placeholder="Additional search terms">
+            
+            <div class="form-group">
+                <label for="limit">Number of Videos (1-50)</label>
+                <div class="number-wrapper">
+                    <input type="number" id="limit" name="limit" min="1" max="50" value="10">
+                    <div class="number-controls">
+                        <button type="button" class="number-control-btn" onclick="adjustNumber('limit', 1)">+</button>
+                        <button type="button" class="number-control-btn" onclick="adjustNumber('limit', -1)">-</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="upload_date">Upload Date</label>
+                <div class="select-wrapper">
+                    <select id="upload_date" name="upload_date">
+                        <option value="any" selected>Any Time</option>
+                        <option value="today">Today</option>
+                        <option value="this_week">This Week</option>
+                        <option value="this_month">This Month</option>
+                        <option value="this_year">This Year</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="duration">Video Duration</label>
+                <div class="select-wrapper">
+                    <select id="duration" name="duration">
+                        <option value="any" selected>Any Length</option>
+                        <option value="short">Short (< 4 min)</option>
+                        <option value="medium">Medium (4-20 min)</option>
+                        <option value="long">Long (> 20 min)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button type="submit">Search Videos</button>
+        </form>
+        <div id="batchLoading" class="loading">Searching videos...</div>
+    </div>
+
+    <div id="videoResults"></div>
+    <button id="processVideosBtn">Process Selected Videos</button>
+    <button id="downloadZipBtn">Download Processed Audio</button>
+
+    <script>
+    document.getElementById('singleVideoForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const loadingDiv = document.getElementById('singleVideoLoading');
+        const errorDiv = document.getElementById('singleVideoError');
+        
+        // Show loading state
+        form.querySelector('button').disabled = true;
+        loadingDiv.style.display = 'block';
+        errorDiv.style.display = 'none';
+        
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch('/download-single', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                // Get filename from Content-Disposition header if available
+                const disposition = response.headers.get('Content-Disposition');
+                const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                const matches = filenameRegex.exec(disposition);
+                const filename = matches && matches[1] ? matches[1].replace(/['"]/g, '') : 'audio.mp3';
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } else {
+                const error = await response.json();
+                errorDiv.textContent = `Error: ${error.error}`;
+                errorDiv.style.display = 'block';
+            }
+        } catch (error) {
+            errorDiv.textContent = `Error processing video: ${error}`;
+            errorDiv.style.display = 'block';
+        } finally {
+            // Reset loading state
+            form.querySelector('button').disabled = false;
+            loadingDiv.style.display = 'none';
+        }
+    });
+
+    function adjustNumber(inputId, change) {
+        const input = document.getElementById(inputId);
+        const newValue = parseInt(input.value) + change;
+        if (newValue >= parseInt(input.min) && newValue <= parseInt(input.max)) {
+            input.value = newValue;
+        }
+    }
+
+    // Add smooth hover effect for number controls
+    document.querySelectorAll('.number-control-btn').forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+            btn.style.transform = 'scale(1.1)';
+        });
+        btn.addEventListener('mouseleave', () => {
+            btn.style.transform = 'scale(1)';
+        });
+    });
+
+    // Add new script for search functionality
+    document.getElementById('searchForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const loadingDiv = document.getElementById('batchLoading');
+        const resultsDiv = document.getElementById('videoResults');
+        
+        // Show loading state
+        form.querySelector('button').disabled = true;
+        loadingDiv.style.display = 'block';
+        resultsDiv.innerHTML = '';
+        
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch('/search', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.videos && data.videos.length > 0) {
+                const resultsHtml = data.videos.map(video => `
+                    <div class="video-item">
+                        <h3>
+                            <a href="${video.link}" target="_blank" class="video-title">
+                                ${video.title}
+                            </a>
+                        </h3>
+                        <p>Channel: ${video.channel}</p>
+                        <p>Duration: ${video.duration}</p>
+                        <p>Views: ${video.views}</p>
+                        <p>Published: ${video.publish_time}</p>
+                        <button onclick="downloadSingle('${video.link}', '${video.title.replace(/'/g, "\\'")}')" class="download-btn">
+                            Download Audio
+                        </button>
+                    </div>
+                `).join('');
+                
+                resultsDiv.innerHTML = `
+                    <h2>Search Results (${data.videos.length} videos found)</h2>
+                    <button onclick='downloadAll(${JSON.stringify(data.videos).replace(/'/g, "\\'")})'
+                            class="download-all-btn">
+                        Download All Audio
+                    </button>
+                    <div id="downloadProgress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill"></div>
+                        </div>
+                        <div class="progress-text">Preparing downloads...</div>
+                    </div>
+                    ${resultsHtml}
+                `;
+            } else {
+                resultsDiv.innerHTML = `
+                    <div class="error-message" style="display: block;">
+                        No videos found matching your criteria
+                    </div>
+                `;
+            }
+        } catch (error) {
+            resultsDiv.innerHTML = `
+                <div class="error-message" style="display: block;">
+                    Error performing search: ${error}
+                </div>
+            `;
+        } finally {
+            // Reset loading state
+            form.querySelector('button').disabled = false;
+            loadingDiv.style.display = 'none';
+        }
+    });
+
+    // Function to handle single video downloads from search results
+    async function downloadSingle(videoUrl, videoTitle) {
+        try {
+            const formData = new FormData();
+            formData.append('video_url', videoUrl);
+            
+            const response = await fetch('/download-single', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${videoTitle}.mp3`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } else {
+                const error = await response.json();
+                alert(`Error: ${error.error}`);
+            }
+        } catch (error) {
+            alert(`Error downloading video: ${error}`);
+        }
+    }
+
+    async function downloadAll(videos) {
+        const totalVideos = videos.length;
+        let completedDownloads = 0;
+        let failedDownloads = 0;
+        
+        // Show progress container
+        const progressContainer = document.getElementById('downloadProgress');
+        const progressBar = progressContainer.querySelector('.progress-bar-fill');
+        const progressText = progressContainer.querySelector('.progress-text');
+        progressContainer.style.display = 'block';
+        
+        // Disable all download buttons while batch download is in progress
+        const downloadButtons = document.querySelectorAll('.download-btn, .download-all-btn');
+        downloadButtons.forEach(btn => btn.disabled = true);
+        
+        try {
+            for (const [index, video] of videos.entries()) {
+                try {
+                    progressText.textContent = `Downloading ${index + 1} of ${totalVideos}: ${video.title}`;
+                    
+                    const formData = new FormData();
+                    formData.append('video_url', video.link);
+                    
+                    const response = await fetch('/download-single', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${video.title}.mp3`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        a.remove();
+                        
+                        completedDownloads++;
+                    } else {
+                        failedDownloads++;
+                        console.error(`Failed to download: ${video.title}`);
+                    }
+                    
+                    const progress = ((index + 1) / totalVideos) * 100;
+                    progressBar.style.width = `${progress}%`;
+                    
+                    // Add small delay between downloads
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                } catch (error) {
+                    failedDownloads++;
+                    console.error(`Error downloading ${video.title}: ${error}`);
+                }
+            }
+        } finally {
+            // Re-enable all download buttons
+            downloadButtons.forEach(btn => btn.disabled = false);
+            
+            // Show final status
+            const successRate = (completedDownloads / totalVideos) * 100;
+            progressText.textContent = `Download Complete: ${completedDownloads} successful, ${failedDownloads} failed (${successRate.toFixed(1)}% success rate)`;
+            
+            // Add status color to progress bar
+            if (failedDownloads === 0) {
+                progressBar.style.backgroundColor = '#4CAF50'; // Green for complete success
+            } else if (completedDownloads === 0) {
+                progressBar.style.backgroundColor = '#f44336'; // Red for complete failure
+            } else {
+                progressBar.style.backgroundColor = '#ff9800'; // Orange for partial success
+            }
+            
+            // Keep the progress display visible
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+            }, 5000);
+        }
+    }
+    </script>
+</body>
+</html>

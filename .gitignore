@@ -1,0 +1,169 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.env
+.venv
+env.bak/
+venv.bak/
+pythonenv*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings
+.classpath
+*.code-workspace
+
+# Logs and databases
+*.log
+logs/
+log/
+*.db
+*.sqlite
+*.sqlite3
+
+# Local development
+instance/
+.webassets-cache
+.env.local
+.env.*.local
+*.local
+
+# Vercel
+.vercel
+.now
+.env*.local
+
+# Media files
+*.mp3
+*.wav
+*.m4a
+*.ogg
+*.aac
+*.wma
+*.flac
+*.mp4
+*.webm
+*.mkv
+*.avi
+*.mov
+
+# Dropbox
+.dropbox
+.dropbox.attr
+.dropbox.cache
+dropbox_credentials.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*~
+.~*
+._*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Python Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Package files
+package-lock.json
+yarn.lock
+*.tgz
+
+# Cache directories
+.cache/
+.npm/
+.yarn/
+node_modules/
+
+# Local SSL certificates
+*.pem
+*.key
+*.crt
+
+# Environment directories
+.env.development
+.env.test
+.env.production
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug files
+*.debug
+debug/
+debug.log
+
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.dll
+*.dylib
+*.class
+*.exe
+*.o
+*.a
+
+# Replit specific
+.replit
+.breakpoints
+.local/
+.pythonlibs/
+.upm/
+.config/
+.bash_history
+.python_history
+poetry.lock
+replit.nix
+.replica/
+.git/
+.gitconfig

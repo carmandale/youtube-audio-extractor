@@ -1,0 +1,35 @@
+--- Summary Report ---
+Primary Search Query: ADC technology cancer treatment
+Total videos found in search: 6
+Videos selected for processing: 3
+Successful audio downloads: 3
+Successful MP3 conversions: 3
+Download success rate: 100.00%
+Conversion success rate: 100.00%
+----------------------
+2024-10-22 15:36:00,926 - INFO - 172.31.196.10 - - [22/Oct/2024 15:36:00] "GET /download_zip HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/home/runner/YouTubeAudioExtractor/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1498, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/YouTubeAudioExtractor/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1476, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/YouTubeAudioExtractor/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/YouTubeAudioExtractor/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/YouTubeAudioExtractor/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/YouTubeAudioExtractor/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/YouTubeAudioExtractor/app.py", line 79, in download_zip
+    return send_file(memory_file, attachment_filename='processed_audio.zip', as_attachment=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: send_file() got an unexpected keyword argument 'attachment_filename'
+2024-10-22 15:36:01,475 - INFO - 172.31.196.10 - - [22/Oct/2024 15:36:01] "GET /download_zip?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2024-10-22 15:36:01,523 - INFO - 172.31.196.10 - - [22/Oct/2024 15:36:01] "GET /download_zip?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
