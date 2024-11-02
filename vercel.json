@@ -13,7 +13,6 @@
     }
   ],
   "env": {
-    "DROPBOX_ACCESS_TOKEN": "@dropbox-access-token",
     "TEMP_DIR": "/tmp"
   }
 }
