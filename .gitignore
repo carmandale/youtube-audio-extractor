@@ -166,4 +166,4 @@ poetry.lock
 replit.nix
 .replica/
 .git/
-.gitconfig
+.gitconfig.env
