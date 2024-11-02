@@ -21,10 +21,15 @@ def download_audio(video_url, default_title="video"):
     :param default_title: Default title if none is found
     :return: Tuple of (file_path, video_title) or (None, None) if download fails
     """
-    # Create temp directory if it doesn't exist
+    # Create temp directory with proper permissions
     temp_dir = tempfile.gettempdir()
     download_dir = Path(temp_dir) / "youtube_audio_downloads"
-    download_dir.mkdir(exist_ok=True)
+    try:
+        download_dir.mkdir(mode=0o755, parents=True, exist_ok=True)
+    except Exception as e:
+        # Fallback to using temp_dir directly if we can't create subdirectory
+        download_dir = Path(temp_dir)
+        print(f"Using fallback directory {temp_dir}: {str(e)}")
     
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -33,6 +38,7 @@ def download_audio(video_url, default_title="video"):
             'preferredcodec': 'wav',
         }],
         'outtmpl': str(download_dir / '%(title)s.%(ext)s'),
+        'ffmpeg_location': '/opt/ffmpeg/ffmpeg',  # Path to ffmpeg in Lambda
     }
 
     try:
