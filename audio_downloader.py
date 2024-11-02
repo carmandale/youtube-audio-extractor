@@ -22,15 +22,8 @@ def download_audio(video_url, default_title="video"):
     :param default_title: Default title if none is found
     :return: Tuple of (file_path, video_title) or (None, None) if download fails
     """
-    # Create temp directory with proper permissions
+    # Use temp directory directly
     temp_dir = tempfile.gettempdir()
-    download_dir = Path(temp_dir) / "youtube_audio_downloads"
-    try:
-        download_dir.mkdir(mode=0o755, parents=True, exist_ok=True)
-    except Exception as e:
-        # Fallback to using temp_dir directly if we can't create subdirectory
-        download_dir = Path(temp_dir)
-        print(f"Using fallback directory {temp_dir}: {str(e)}")
     
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -38,23 +31,29 @@ def download_audio(video_url, default_title="video"):
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'wav',
         }],
-        'outtmpl': str(download_dir / '%(title)s.%(ext)s'),
+        'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
     }
 
     # Add ffmpeg path if we're in Vercel environment
     if os.environ.get('VERCEL') == '1':
-        ydl_opts['ffmpeg_location'] = '/tmp/ffmpeg/ffmpeg'
-        logging.info(f"Using ffmpeg from: {ydl_opts['ffmpeg_location']}")
+        ffmpeg_path = os.path.join(tempfile.gettempdir(), 'ffmpeg', 'ffmpeg')
+        ydl_opts['ffmpeg_location'] = ffmpeg_path
+        logging.info(f"Using ffmpeg from: {ffmpeg_path}")
+        if not os.path.exists(ffmpeg_path):
+            logging.error(f"FFmpeg not found at {ffmpeg_path}")
+            return None, None
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            logging.info("Starting download...")
             info = ydl.extract_info(video_url, download=True)
             filename = ydl.prepare_filename(info)
             video_title = info.get('title', default_title)
             base, _ = os.path.splitext(filename)
             wav_path = f"{base}.wav"
+            logging.info(f"Download completed: {wav_path}")
             return wav_path, sanitize_filename(video_title)
     except Exception as e:
-        print(f"Error downloading audio: {str(e)}")
-        print(traceback.format_exc())
+        logging.error(f"Error downloading audio: {str(e)}")
+        logging.error(traceback.format_exc())
         return None, None
