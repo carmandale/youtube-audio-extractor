@@ -4,6 +4,7 @@ import traceback
 import re
 import tempfile
 from pathlib import Path
+import logging
 
 def sanitize_filename(title):
     """Clean the title to make it filesystem-friendly"""
@@ -38,8 +39,12 @@ def download_audio(video_url, default_title="video"):
             'preferredcodec': 'wav',
         }],
         'outtmpl': str(download_dir / '%(title)s.%(ext)s'),
-        'ffmpeg_location': '/opt/ffmpeg/ffmpeg',  # Path to ffmpeg in Lambda
     }
+
+    # Add ffmpeg path if we're in Vercel environment
+    if os.environ.get('VERCEL') == '1':
+        ydl_opts['ffmpeg_location'] = '/tmp/ffmpeg/ffmpeg'
+        logging.info(f"Using ffmpeg from: {ydl_opts['ffmpeg_location']}")
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
