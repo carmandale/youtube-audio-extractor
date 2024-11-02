@@ -1,27 +1,29 @@
 from flask import Flask, render_template, request, jsonify, send_file, session
 from youtube_search import search_youtube
 from audio_downloader import download_audio
-from audio_converter import convert_to_mp3
+from audio_converter import convert_to_mp3, cleanup_files
 from utils import create_summary_report
 import threading
 import logging
 import os
 import zipfile
 from io import BytesIO
+import tempfile
+from pathlib import Path
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # Set a secret key for session management
+app.secret_key = os.urandom(24)
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 @app.route('/')
 def index():
-    session['processed_files'] = []  # Clear the list of processed files for each new session
+    session['processed_files'] = []
     return render_template('index.html')
 
 @app.route('/search', methods=['POST'])
 def search_videos():
-    session['processed_files'] = []  # Clear the list of processed files for each new search
+    session['processed_files'] = []
     primary_query = request.form['primary_query']
     secondary_query = request.form['secondary_query']
     limit = int(request.form['limit'])
@@ -79,13 +81,26 @@ def download_zip():
     if not processed_files:
         return jsonify({"error": "No files were processed in the current session."}), 400
 
-    memory_file = BytesIO()
-    with zipfile.ZipFile(memory_file, 'w') as zf:
+    try:
+        memory_file = BytesIO()
+        with zipfile.ZipFile(memory_file, 'w') as zf:
+            for file in processed_files:
+                if os.path.exists(file):
+                    zf.write(file, os.path.basename(file))
+        
+        # Clean up processed files
         for file in processed_files:
-            if os.path.exists(file):
-                zf.write(file, os.path.basename(file))
-    memory_file.seek(0)
-    return send_file(memory_file, download_name='processed_audio.zip', as_attachment=True)
+            cleanup_files(file)
+        
+        memory_file.seek(0)
+        return send_file(
+            memory_file,
+            download_name='processed_audio.zip',
+            as_attachment=True
+        )
+    except Exception as e:
+        logging.error(f"Error creating zip file: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/test_search', methods=['POST'])
 def test_search():
@@ -183,13 +198,16 @@ def download_single():
         audio_file, video_title = download_audio(video_url, "single_video")
         if audio_file:
             # Convert to MP3
-            if convert_to_mp3(audio_file):
-                mp3_file = audio_file.replace('.wav', '.mp3')
-                return send_file(
+            mp3_file = convert_to_mp3(audio_file)
+            if mp3_file:
+                response = send_file(
                     mp3_file,
                     as_attachment=True,
                     download_name=f"{video_title}.mp3"
                 )
+                # Clean up after sending
+                cleanup_files(mp3_file)
+                return response
             else:
                 return jsonify({"error": "Failed to convert audio"}), 500
         else:
@@ -197,6 +215,69 @@ def download_single():
     except Exception as e:
         logging.error(f"Error processing single video: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/debug/paths')
+def debug_paths():
+    temp_dir = tempfile.gettempdir()
+    download_dir = Path(temp_dir) / "youtube_audio_downloads"
+    
+    # Get additional system info
+    try:
+        import sys
+        import platform
+        system_info = {
+            'python_version': sys.version,
+            'platform': platform.platform(),
+            'cwd': os.getcwd(),
+            'env_temp': os.environ.get('TEMP', 'Not set'),
+            'env_tmp': os.environ.get('TMP', 'Not set'),
+        }
+    except Exception as e:
+        system_info = str(e)
+
+    return jsonify({
+        'temp_dir': str(temp_dir),
+        'download_dir': str(download_dir),
+        'download_dir_exists': download_dir.exists(),
+        'download_dir_writable': os.access(str(download_dir), os.W_OK) if download_dir.exists() else False,
+        'system_info': system_info,
+        'env_vars': dict(os.environ),  # Be careful with this in production
+        'current_working_directory': os.getcwd(),
+        'directory_listing': os.listdir(temp_dir) if os.path.exists(temp_dir) else []
+    })
+
+@app.route('/debug/cleanup')
+def debug_cleanup():
+    temp_dir = tempfile.gettempdir()
+    download_dir = Path(temp_dir) / "youtube_audio_downloads"
+    
+    cleanup_results = {
+        'before_cleanup': [],
+        'cleanup_actions': [],
+        'after_cleanup': [],
+        'errors': []
+    }
+    
+    try:
+        # List files before cleanup
+        if download_dir.exists():
+            cleanup_results['before_cleanup'] = os.listdir(download_dir)
+            
+            # Attempt to clean up each file
+            for file in download_dir.iterdir():
+                try:
+                    file.unlink()
+                    cleanup_results['cleanup_actions'].append(f"Removed {file.name}")
+                except Exception as e:
+                    cleanup_results['errors'].append(f"Error removing {file.name}: {str(e)}")
+            
+            # List remaining files
+            cleanup_results['after_cleanup'] = os.listdir(download_dir)
+            
+    except Exception as e:
+        cleanup_results['errors'].append(f"General error: {str(e)}")
+    
+    return jsonify(cleanup_results)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
